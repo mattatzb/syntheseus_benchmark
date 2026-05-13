@@ -16,12 +16,17 @@ The repository now uses a source-based CLI and analysis package in `src/`:
 - `src/analysis/extractor.py` - local route pickle extractor
 - `src/analysis/visualizer.py` - RDKit sampling and grid image generation
 - `src/config.py` - centralized path defaults and environment overrides
+- `outputs/*.csv` - example CSV outputs generated with `src/cli/aggregate_results.py`
+- `outputs/molecule_samples/` - example image outputs generated with `src/cli/sample_molecules.py`
+
+The example files in `outputs/` were generated from Syntheseus result folders under
+`syntheseus_outputs/`.
 
 ## Expected Results Structure
 
 The current scripts expect the benchmark output root to contain method folders, where each method folder contains numeric target folders:
 
-\`\`\`text
+```text
 syntheseus_outputs/
   1_top_results/
     METHOD_NAME/
@@ -31,7 +36,7 @@ syntheseus_outputs/
       1/
       ...
       99/
-\`\`\`
+```
 
 ## Configuration
 
@@ -48,12 +53,12 @@ Path defaults are managed in `src/config.py`. The current defaults are:
 
 You can override defaults without editing code by exporting environment variables:
 
-\`\`\`bash
+```bash
 export SYNTHSEUS_BENCHMARK_RESULTS_ROOT=/path/to/results_root
 export SYNTHSEUS_BENCHMARK_ANALYSIS_ROOT=/path/to/analysis_root
 export SYNTHSEUS_BENCHMARK_DATA_DIR=/path/to/data
 export SYNTHSEUS_BENCHMARK_INVENTORY_SMILES_FILE=/path/to/inventory.smi
-\`\`\`
+```
 
 Then run the CLI normally.
 
@@ -72,9 +77,9 @@ From the repository root, use the CLI entrypoints in `src/cli`.
 
 ### Aggregate benchmark CSV
 
-\`\`\`bash
+```bash
 python src/cli/aggregate_results.py
-\`\`\`
+```
 
 This scans all methods under the configured results root and writes a summary CSV to the configured analysis output.
 
@@ -102,9 +107,9 @@ This scans all methods under the configured results root and writes a summary CS
 
 ### Sample solved/unsolved molecules
 
-\`\`\`bash
+```bash
 python src/cli/sample_molecules.py
-\`\`\`
+```
 
 This samples solved and unsolved targets from each method's latest benchmark data and generates RDKit image grids.
 
@@ -125,33 +130,33 @@ This samples solved and unsolved targets from each method's latest benchmark dat
 
 ### Generate a new summary CSV
 
-\`\`\`bash
+```bash
 python src/cli/aggregate_results.py
-\`\`\`
+```
 
 ### Generate a summary with inventory and debug columns
 
-\`\`\`bash
+```bash
 python src/cli/aggregate_results.py --show-inventory-columns --show-debug-columns
-\`\`\`
+```
 
 ### Use a different results root
 
-\`\`\`bash
+```bash
 python src/cli/aggregate_results.py --results-root syntheseus_outputs/50_top_results
-\`\`\`
+```
 
 ### Save results to a custom CSV path
 
-\`\`\`bash
+```bash
 python src/cli/aggregate_results.py --output-csv outputs/50_top_results_summary.csv
-\`\`\`
+```
 
 ### Sample molecules with a custom output directory
 
-\`\`\`bash
+```bash
 python src/cli/sample_molecules.py --output-dir outputs/samples
-\`\`\`
+```
 
 ## Notes
 
