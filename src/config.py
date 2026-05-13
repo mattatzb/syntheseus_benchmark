@@ -26,9 +26,9 @@ class Config:
         "SYNTHSEUS_BENCHMARK_RESULTS_ROOT",
         PROJECT_ROOT / "syntheseus_outputs" / "1_top_results",
     )
-    ANALYSIS_ROOT: Path = _path_from_env(
-        "SYNTHSEUS_BENCHMARK_ANALYSIS_ROOT",
-        PROJECT_ROOT / "outputs" / "test_output",
+    OUTPUT_ROOT: Path = _path_from_env(
+        "SYNTHSEUS_BENCHMARK_OUTPUT_ROOT",
+        PROJECT_ROOT / "outputs",
     )
     DATA_DIR: Path = _path_from_env(
         "SYNTHSEUS_BENCHMARK_DATA_DIR",
@@ -38,8 +38,9 @@ class Config:
         "SYNTHSEUS_BENCHMARK_INVENTORY_SMILES_FILE",
         DATA_DIR / "enamine_sep_lpdc_blocks.smi",
     )
-    DEFAULT_OUTPUT_CSV: Path = ANALYSIS_ROOT / "results_summary.csv"
-    DEFAULT_SAMPLE_DIR: Path = ANALYSIS_ROOT / "molecule_samples"
+    DEFAULT_OUTPUT_CSV: Path = OUTPUT_ROOT / "results_summary.csv"
+    DEFAULT_SAMPLE_DIR: Path = OUTPUT_ROOT / "molecule_samples"
+    DEFAULT_OUTPUT_PLOT: Path = OUTPUT_ROOT / "results_plot.pdf"
 
     @classmethod
     def validate_path(cls, path: Path, description: str) -> None:
@@ -65,5 +66,5 @@ class Config:
         usually required for analysis and data processing.
         """
         cls.validate_path(cls.RESULTS_ROOT, "results root")
-        cls.validate_path(cls.ANALYSIS_ROOT, "analysis root")
+        cls.validate_path(cls.OUTPUT_ROOT, "output root")
         cls.validate_path(cls.DATA_DIR, "data directory")

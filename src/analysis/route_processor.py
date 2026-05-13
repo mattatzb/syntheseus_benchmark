@@ -14,7 +14,13 @@ import math
 from pathlib import Path
 from typing import Callable
 
-from .utils import is_finite_number, mean_or_nan, shorten_notes
+from .utils import (
+    canonicalize_smiles,
+    extract_reactant_smiles,
+    is_finite_number,
+    mean_or_nan,
+    shorten_notes,
+)
 
 
 def route_length_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -> float:
@@ -56,6 +62,80 @@ def route_length_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -
     return math.nan
 
 
+def reactants_count_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -> list[int]:
+    """
+    Extract the number of reactants for each reaction step in a route pickle.
+
+    Args:
+        route_pkl: Path to the route pickle file.
+        extract_data: Function that deserializes pickle routes to JSON.
+
+    Returns:
+        One integer per reaction node, in extracted route order.
+    """
+    raw = extract_data(str(route_pkl))
+    data = json.loads(raw)
+    reactants_counts: list[int] = []
+    inferred_reactants_counts: list[int] = []
+
+    for node_info in data.values():
+        if not isinstance(node_info, dict):
+            continue
+        inferred_count = node_info.get("inferred_reactant_count")
+        if isinstance(inferred_count, int) and inferred_count > 0:
+            inferred_reactants_counts.append(inferred_count)
+        if not bool(node_info.get("is_rxn", False)):
+            continue
+
+        rxn_smiles = node_info.get("rxn_smiles")
+        if not isinstance(rxn_smiles, str):
+            rxn_smiles = None
+        reactants_counts.append(len(extract_reactant_smiles(rxn_smiles)))
+
+    return reactants_counts or inferred_reactants_counts
+
+
+def building_blocks_count_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -> int:
+    """
+    Count unique purchasable building blocks in a route pickle.
+
+    Args:
+        route_pkl: Path to the route pickle file.
+        extract_data: Function that deserializes pickle routes to JSON.
+
+    Returns:
+        Number of unique canonical molecule SMILES marked as purchasable.
+    """
+    raw = extract_data(str(route_pkl))
+    data = json.loads(raw)
+    building_blocks: set[str] = set()
+
+    for node_info in data.values():
+        if not isinstance(node_info, dict):
+            continue
+
+        if bool(node_info.get("is_mol", False)) and bool(node_info.get("is_purchasable", False)):
+            mol_smiles = node_info.get("mol_smiles")
+            if isinstance(mol_smiles, str):
+                canonical = canonicalize_smiles(mol_smiles)
+                if canonical is not None:
+                    building_blocks.add(canonical)
+
+        for mol_info in node_info.get("mols", []):
+            if not isinstance(mol_info, dict):
+                continue
+            if not bool(mol_info.get("is_purchasable", False)):
+                continue
+            mol_smiles = mol_info.get("smiles")
+            if not isinstance(mol_smiles, str):
+                continue
+            canonical = canonicalize_smiles(mol_smiles)
+            if canonical is not None:
+                building_blocks.add(canonical)
+
+    return len(building_blocks)
+
+
 def analyze_method(
     method_dir: Path,
     extract_data: Callable[[str], str],
@@ -85,6 +165,9 @@ def analyze_method(
             - mean_wall_time_s: Average wall-clock time for solved targets
             - avg_route_length: Average number of reactions per route
             - avg_num_routes: Average number of routes found per target
+            - route_lengths: Number of reactions for each route
+            - reaction_reactant_counts: Number of reactants for each reaction step
+            - route_building_block_counts: Number of unique building blocks for each route
             - note: Concatenated error/warning messages (up to 5)
     """
 
@@ -104,6 +187,9 @@ def analyze_method(
             "mean_wall_time_s": math.nan,
             "avg_route_length": math.nan,
             "avg_num_routes": math.nan,
+            "route_lengths": [],
+            "reaction_reactant_counts": [],
+            "route_building_block_counts": [],
             "note": "no run directories",
         }
 
@@ -115,8 +201,10 @@ def analyze_method(
     n_inventory_excluded = 0
     n_solved = 0
     wall_times: list[float] = []
-    route_lengths: list[float] = []  # One entry per extracted route file.
+    route_lengths: list[float] = []  
     route_counts: list[float] = []
+    reaction_reactant_counts: list[int] = []
+    route_building_block_counts: list[int] = []
     notes: list[str] = []
 
     for target_dir in all_run_dirs:
@@ -145,6 +233,12 @@ def analyze_method(
         for route_file in route_files:
             try:
                 route_length = route_length_from_pkl(route_file, extract_data)
+                reaction_reactant_counts.extend(
+                    reactants_count_from_pkl(route_file, extract_data)
+                )
+                route_building_block_counts.append(
+                    building_blocks_count_from_pkl(route_file, extract_data)
+                )
             except Exception as exc:  # noqa: BLE001
                 notes.append(f"{target_dir.name}/{route_file.name}: parse failed ({exc})")
                 continue
@@ -167,5 +261,8 @@ def analyze_method(
         "mean_wall_time_s": mean_or_nan(wall_times),
         "avg_route_length": mean_or_nan(route_lengths),
         "avg_num_routes": mean_or_nan(route_counts),
+        "route_lengths": route_lengths,
+        "reaction_reactant_counts": reaction_reactant_counts,
+        "route_building_block_counts": route_building_block_counts,
         "note": shorten_notes(notes),
     }

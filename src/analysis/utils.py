@@ -99,3 +99,22 @@ def canonicalize_smiles(smiles: str | None) -> str | None:
     if mol is None:
         return None
     return Chem.MolToSmiles(mol)
+
+def extract_reactant_smiles(rxn_smiles: str | None) -> list[str]:
+    """Extract reactant SMILES from a reaction SMILES string.
+    Args:
+        rxn_smiles: Reaction SMILES string (e.g., "CCO.CN>>CCN").
+        Returns: List of reactant SMILES strings.
+    """
+    if not rxn_smiles:
+        return []
+    parts = rxn_smiles.split(">>")
+    if len(parts) != 2:
+        return []
+    reactants = parts[0].split(".")
+    reactants_canonical = []
+    for r in reactants:
+        canonical = canonicalize_smiles(r)
+        if canonical:
+            reactants_canonical.append(canonical)
+    return reactants_canonical

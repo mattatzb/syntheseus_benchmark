@@ -7,3 +7,12 @@ Pistachio_tests/
 
 # Legacy files
 legacy_code/
+
+# Temporary files
+outputs/test_outputs/
+
+# Ignore Python bytecode and cache directories
+__pycache__/
+src/analysis/__pycache__/
+src/cli/__pycache__/
+src/data_prep/__pycache__/

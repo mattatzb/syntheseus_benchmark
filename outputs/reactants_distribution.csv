@@ -1,0 +1,17 @@
+method,run_dir,metric,value,count,proportion
+LocalRetro_mcts,1_top_results,n_reactants,1,16,0.372093
+LocalRetro_mcts,1_top_results,n_reactants,2,27,0.627907
+LocalRetro_retro_star,1_top_results,n_reactants,1,10,0.312500
+LocalRetro_retro_star,1_top_results,n_reactants,2,22,0.687500
+MEGAN_mcts,1_top_results,n_reactants,1,22,0.423077
+MEGAN_mcts,1_top_results,n_reactants,2,30,0.576923
+MEGAN_retro_star,1_top_results,n_reactants,1,14,0.350000
+MEGAN_retro_star,1_top_results,n_reactants,2,26,0.650000
+Pistachio_MEGAN_mcts,1_top_results,n_reactants,1,19,0.306452
+Pistachio_MEGAN_mcts,1_top_results,n_reactants,2,43,0.693548
+Pistachio_MEGAN_retro_star,1_top_results,n_reactants,1,14,0.280000
+Pistachio_MEGAN_retro_star,1_top_results,n_reactants,2,36,0.720000
+RetroKNN_mcts,1_top_results,n_reactants,1,39,0.438202
+RetroKNN_mcts,1_top_results,n_reactants,2,50,0.561798
+RetroKNN_retro_star,1_top_results,n_reactants,1,22,0.440000
+RetroKNN_retro_star,1_top_results,n_reactants,2,28,0.560000

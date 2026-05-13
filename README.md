@@ -13,10 +13,12 @@ The repository now uses a source-based CLI and analysis package in `src/`:
 - `src/cli/sample_molecules.py` - sample and visualize solved/unsolved molecules
 - `src/analysis/aggregator.py` - CSV aggregation logic
 - `src/analysis/route_processor.py` - target-level metric extraction
-- `src/analysis/extractor.py` - local route pickle extractor
+- `src/analysis/retro_star_extractor.py` - route pickle extractor for reaction-node routes
+- `src/analysis/mcts_extractor.py` - route pickle extractor for MCTS state-node routes
+- `src/analysis/plots.py` - route distribution plot generation
 - `src/analysis/visualizer.py` - RDKit sampling and grid image generation
 - `src/config.py` - centralized path defaults and environment overrides
-- `outputs/*.csv` - example CSV outputs generated with `src/cli/aggregate_results.py`
+- `outputs/*.csv` - example CSV and plot outputs generated with `src/cli/aggregate_results.py`
 - `outputs/molecule_samples/` - example image outputs generated with `src/cli/sample_molecules.py`
 
 The example files in `outputs/` were generated from Syntheseus result folders under
@@ -43,11 +45,12 @@ syntheseus_outputs/
 Path defaults are managed in `src/config.py`. The current defaults are:
 
 - `RESULTS_ROOT`: `PROJECT_ROOT / "syntheseus_outputs" / "1_top_results"`
-- `ANALYSIS_ROOT`: `PROJECT_ROOT / "outputs" / "test_output"`
+- `OUTPUT_ROOT`: `PROJECT_ROOT / "outputs" / "test_outputs"`
 - `DATA_DIR`: `PROJECT_ROOT / "data"`
 - `INVENTORY_SMILES_FILE`: `DATA_DIR / "enamine_sep_lpdc_blocks.smi"`
-- `DEFAULT_OUTPUT_CSV`: `ANALYSIS_ROOT / "results_summary.csv"`
-- `DEFAULT_SAMPLE_DIR`: `ANALYSIS_ROOT / "molecule_samples"`
+- `DEFAULT_OUTPUT_CSV`: `OUTPUT_ROOT / "results_summary.csv"`
+- `DEFAULT_SAMPLE_DIR`: `OUTPUT_ROOT / "molecule_samples"`
+- `DEFAULT_OUTPUT_PLOT`: `OUTPUT_ROOT / "results_plot.pdf"`
 
 ### Environment variable overrides
 
@@ -55,7 +58,7 @@ You can override defaults without editing code by exporting environment variable
 
 ```bash
 export SYNTHSEUS_BENCHMARK_RESULTS_ROOT=/path/to/results_root
-export SYNTHSEUS_BENCHMARK_ANALYSIS_ROOT=/path/to/analysis_root
+export SYNTHSEUS_BENCHMARK_OUTPUT_ROOT=/path/to/output_root
 export SYNTHSEUS_BENCHMARK_DATA_DIR=/path/to/data
 export SYNTHSEUS_BENCHMARK_INVENTORY_SMILES_FILE=/path/to/inventory.smi
 ```
@@ -82,6 +85,7 @@ python src/cli/aggregate_results.py
 ```
 
 This scans all methods under the configured results root and writes a summary CSV to the configured analysis output.
+The summary CSV columns are unchanged when plot data is requested.
 
 #### Common options
 
@@ -104,6 +108,12 @@ This scans all methods under the configured results root and writes a summary CS
   - Merge updated rows into an existing CSV rather than replacing it.
 - `--run-dir PATH`
   - Specify individual run directories explicitly.
+- `--write-plot-data`
+  - Write distribution CSVs for route length, route building blocks, and reaction-step reactant counts.
+- `--plot-distributions`
+  - Write the distribution CSVs and generate the configured distribution plot PDF.
+- `--plot-data-dir PATH`
+  - Directory for the distribution CSVs.
 
 ### Sample solved/unsolved molecules
 
@@ -152,6 +162,20 @@ python src/cli/aggregate_results.py --results-root syntheseus_outputs/50_top_res
 python src/cli/aggregate_results.py --output-csv outputs/50_top_results_summary.csv
 ```
 
+### Generate summary CSV and distribution plots
+
+```bash
+python src/cli/aggregate_results.py --plot-distributions
+```
+
+This writes the normal summary CSV, the three distribution CSVs, and the PDF configured by `DEFAULT_OUTPUT_PLOT`.
+
+### Generate only plot-data CSVs
+
+```bash
+python src/cli/aggregate_results.py --write-plot-data
+```
+
 ### Sample molecules with a custom output directory
 
 ```bash
@@ -160,7 +184,8 @@ python src/cli/sample_molecules.py --output-dir outputs/samples
 
 ## Notes
 
-- The repository now uses `src/cli/*` entrypoints instead of old top-level scripts.
 - `src/config.py` centralizes the most important path defaults.
+- MCTS routes are stored as state-node paths rather than explicit reaction-node paths. Route length and final building-block counts are extracted from the MCTS state sequence. Reactant counts for MCTS are inferred from newly introduced molecules between consecutive states.
+- Retro-star routes use explicit reaction SMILES, so reaction-step reactant counts are extracted directly from `rxn_smiles`.
 - For persistent local customization, editing `src/config.py` is often easier than repeating long CLI arguments.
 - For temporary changes, use the environment variables listed above.
