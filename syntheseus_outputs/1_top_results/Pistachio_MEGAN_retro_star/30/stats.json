@@ -1,0 +1,9 @@
+{
+  "index": 30,
+  "smiles": "ClC1=C(Cl)C2(Cl)C3CO[S](=O)OCC3C1(Cl)C2(Cl)Cl",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 2,
+  "num_nodes_in_final_tree": 4,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

@@ -1,0 +1,9 @@
+{
+  "index": 59,
+  "smiles": "CC1=CC(=C(C=C1)N=CN(C)C)C.Cl",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1285,
+  "num_nodes_in_final_tree": 401748,
+  "soln_time_rxn_model_calls": 14,
+  "soln_time_wallclock": 1.412432
+}

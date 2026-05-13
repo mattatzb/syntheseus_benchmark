@@ -1,0 +1,9 @@
+{
+  "index": 4,
+  "smiles": "CCO[P](=S)(OCC)Oc1cc(C)nc(n1)N(CC)CC",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 4,
+  "num_nodes_in_final_tree": 4,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

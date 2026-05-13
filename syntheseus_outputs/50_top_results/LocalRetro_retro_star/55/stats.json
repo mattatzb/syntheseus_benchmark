@@ -1,0 +1,9 @@
+{
+  "index": 55,
+  "smiles": "CCNc1nc(NC(C)(C)C)nc(OC)n1",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 2075,
+  "num_nodes_in_final_tree": 612612,
+  "soln_time_rxn_model_calls": 3,
+  "soln_time_wallclock": 0.2273
+}

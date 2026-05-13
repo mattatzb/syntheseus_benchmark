@@ -1,0 +1,9 @@
+{
+  "index": 0,
+  "smiles": "CC1=C(C(=O)CC1OC(=O)[C@@H]2[C@H](C2(C)C)C=C(C)C)CC=C",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1331,
+  "num_nodes_in_final_tree": 251797,
+  "soln_time_rxn_model_calls": 382,
+  "soln_time_wallclock": 49.207585
+}

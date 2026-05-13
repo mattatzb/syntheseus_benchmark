@@ -1,0 +1,12 @@
+{
+  "num_targets": 100,
+  "num_solved_targets": 21,
+  "average_rxn_model_calls_used": 3.47,
+  "median_rxn_model_calls_used": 3.0,
+  "average_num_nodes_in_final_tree": 8.36,
+  "median_num_nodes_in_final_tree": 7.0,
+  "average_soln_time_rxn_model_calls": Infinity,
+  "median_soln_time_rxn_model_calls": Infinity,
+  "average_soln_time_wallclock": Infinity,
+  "median_soln_time_wallclock": Infinity
+}

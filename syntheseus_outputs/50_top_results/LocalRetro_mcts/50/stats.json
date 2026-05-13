@@ -1,0 +1,9 @@
+{
+  "index": 50,
+  "smiles": "CC(=O)CC(c1ccccc1)C2=C(O)Oc3ccccc3C2=O",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1163,
+  "num_nodes_in_final_tree": 508353,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

@@ -1,0 +1,9 @@
+{
+  "index": 80,
+  "smiles": "Fc1cccc(F)c1C(=O)NC(=O)Nc2ccc(Cl)cc2",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 3,
+  "num_nodes_in_final_tree": 3,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

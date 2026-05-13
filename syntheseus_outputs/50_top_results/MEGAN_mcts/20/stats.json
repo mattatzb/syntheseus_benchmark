@@ -1,0 +1,9 @@
+{
+  "index": 20,
+  "smiles": "COc1cc(OC)nc(NC(=O)N[S](=O)(=O)c2ncccc2C(=O)N(C)C)n1",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 348,
+  "num_nodes_in_final_tree": 231665,
+  "soln_time_rxn_model_calls": 10,
+  "soln_time_wallclock": 1.040394
+}

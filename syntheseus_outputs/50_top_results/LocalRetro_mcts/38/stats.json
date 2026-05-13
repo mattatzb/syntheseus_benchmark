@@ -1,0 +1,9 @@
+{
+  "index": 38,
+  "smiles": "CCO[P](=O)(OCC)N=C1SCCS1",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1059,
+  "num_nodes_in_final_tree": 2175973,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

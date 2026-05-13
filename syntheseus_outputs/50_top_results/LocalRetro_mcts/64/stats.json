@@ -1,0 +1,9 @@
+{
+  "index": 64,
+  "smiles": "CO[P](=S)(OC)SCN1C(=O)c2ccccc2C1=O",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 224,
+  "num_nodes_in_final_tree": 45692,
+  "soln_time_rxn_model_calls": 15,
+  "soln_time_wallclock": 0.510676
+}

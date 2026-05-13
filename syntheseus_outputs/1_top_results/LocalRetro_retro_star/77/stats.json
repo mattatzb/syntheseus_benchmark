@@ -1,0 +1,9 @@
+{
+  "index": 77,
+  "smiles": "C[C@@H](N(c1ccc(F)c(Cl)c1)C(=O)c2ccccc2)C(O)=O",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 4,
+  "num_nodes_in_final_tree": 8,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

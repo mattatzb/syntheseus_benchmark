@@ -1,0 +1,9 @@
+# Syntheseus submit and configuration files
+syntheseus_outputs/configs/
+submit_run/
+
+# Paths difference check
+Pistachio_tests/
+
+# Legacy files
+legacy_code/

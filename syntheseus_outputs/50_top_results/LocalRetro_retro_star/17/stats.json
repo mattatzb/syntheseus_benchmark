@@ -1,0 +1,9 @@
+{
+  "index": 17,
+  "smiles": "CO[P](=O)(OC)C(O)C(Cl)(Cl)Cl",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1650,
+  "num_nodes_in_final_tree": 336954,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

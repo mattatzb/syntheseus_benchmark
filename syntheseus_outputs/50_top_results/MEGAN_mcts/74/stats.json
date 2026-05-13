@@ -1,0 +1,9 @@
+{
+  "index": 74,
+  "smiles": "CC1=C(SC(=C1C(=O)NCC=C)[Si](C)(C)C)C",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 446,
+  "num_nodes_in_final_tree": 1758754,
+  "soln_time_rxn_model_calls": 4,
+  "soln_time_wallclock": 0.465501
+}

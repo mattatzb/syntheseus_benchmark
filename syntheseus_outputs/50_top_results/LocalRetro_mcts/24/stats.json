@@ -1,0 +1,9 @@
+{
+  "index": 24,
+  "smiles": "CNC(=O)CS[P](=S)(OC)OC",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 725,
+  "num_nodes_in_final_tree": 2559918,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

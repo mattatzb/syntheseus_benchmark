@@ -1,0 +1,9 @@
+{
+  "index": 75,
+  "smiles": "BrCCBr",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1293,
+  "num_nodes_in_final_tree": 288859,
+  "soln_time_rxn_model_calls": 1,
+  "soln_time_wallclock": 0.169705
+}

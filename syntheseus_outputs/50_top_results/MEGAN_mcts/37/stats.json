@@ -1,0 +1,9 @@
+{
+  "index": 37,
+  "smiles": "CNC(=O)N(C)c1sc(nn1)C(F)(F)F",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 248,
+  "num_nodes_in_final_tree": 265599,
+  "soln_time_rxn_model_calls": 11,
+  "soln_time_wallclock": 1.468747
+}

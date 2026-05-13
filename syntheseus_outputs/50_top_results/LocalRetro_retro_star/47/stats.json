@@ -1,0 +1,9 @@
+{
+  "index": 47,
+  "smiles": "[Na+].O=C(C(c1ccccc1)c2ccccc2)C3C(=O)c4ccccc4C3=O",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 1306,
+  "num_nodes_in_final_tree": 220348,
+  "soln_time_rxn_model_calls": 4,
+  "soln_time_wallclock": 0.707769
+}

@@ -1,0 +1,9 @@
+{
+  "index": 28,
+  "smiles": "CNC(=O)N(C)C1=NN=C(S1)S(=O)(=O)N(C)C",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 5,
+  "num_nodes_in_final_tree": 12,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}

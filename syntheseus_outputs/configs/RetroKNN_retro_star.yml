@@ -1,0 +1,8 @@
+model_class: "RetroKNN"
+search_algorithm: "retro_star"
+search_targets_file: "/home/tatzber/syntheseus_benchmark/results_6_runs/targets_top100clust.smi"
+results_dir: "/home/tatzber/syntheseus_benchmark/results_6_runs/RetroKNN_retro_star/"
+time_limit_s: 180
+num_top_results: 1
+inventory_smiles_file: "/home/tatzber/syntheseus_benchmark/enamine_sep_lpdc_blocks.smi" 
+save_graph: False

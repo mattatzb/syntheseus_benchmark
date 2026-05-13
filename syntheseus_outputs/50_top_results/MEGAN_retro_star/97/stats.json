@@ -1,0 +1,9 @@
+{
+  "index": 97,
+  "smiles": "C1(=NN=C(S1)[S-])N.C1(=NN=C(S1)[S-])N.[Zn+2]",
+  "target_in_inventory": false,
+  "rxn_model_calls_used": 648,
+  "num_nodes_in_final_tree": 146818,
+  "soln_time_rxn_model_calls": Infinity,
+  "soln_time_wallclock": Infinity
+}
