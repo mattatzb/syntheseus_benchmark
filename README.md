@@ -32,15 +32,6 @@ This regenerates, in `data/`:
 - `pesticides_update_filter_cluster_summary.csv`
 - `targets_no_bb_top100clust.smi`
 
-Expected result: **2564 raw records -> 1590 QED-qualified records -> 1527 final
-records -> 918 clusters -> 100 benchmark targets**, matching the original target
-file and order.
-
-Preparation uses QED >= 0.5, Morgan fingerprints (radius 2, 2048 bits), and Butina
-clustering (distance cutoff 0.4). Inventory-owned centroids among the top 100 are
-removed recursively, with reclustering after each removal round. Other inventory
-members and duplicate source records remain in the clustering pool.
-
 ## 3. Download the archived search outputs
 
 Download the required ZIPs from **[Zenodo: 10.5281/zenodo.23669375](https://doi.org/10.5281/zenodo.23669375)**
