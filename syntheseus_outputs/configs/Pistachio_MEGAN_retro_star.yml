@@ -1,0 +1,9 @@
+model_class: "MEGAN"
+model_dir: "MEGAN_backward"
+search_algorithm: "retro_star"
+search_targets_file: "data/targets_no_bb_top100clust.smi"
+results_dir: "syntheseus_outputs/1_top_results/Pistachio_MEGAN_retro_star/"
+time_limit_s: 180
+num_top_results: 1
+inventory_smiles_file: "data/enamine_sep_lpdc_blocks.smi"
+save_graph: False

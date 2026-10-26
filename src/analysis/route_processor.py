@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import math
+import warnings
 from pathlib import Path
 from typing import Callable
 
@@ -21,6 +22,10 @@ from .utils import (
     mean_or_nan,
     shorten_notes,
 )
+
+
+class UnreliableReactantCountsError(ValueError):
+    """An MCTS state sequence cannot supply a complete reactant distribution."""
 
 
 def route_length_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -> float:
@@ -72,6 +77,11 @@ def reactants_count_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]
 
     Returns:
         One integer per reaction node, in extracted route order.
+
+    Raises:
+        UnreliableReactantCountsError: Inferred MCTS transitions are incomplete
+            or inconsistent. The caller must omit the method's reactant
+            distribution rather than normalize a partial set of counts.
     """
     raw = extract_data(str(route_pkl))
     data = json.loads(raw)
@@ -92,7 +102,34 @@ def reactants_count_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]
             rxn_smiles = None
         reactants_counts.append(len(extract_reactant_smiles(rxn_smiles)))
 
-    return reactants_counts or inferred_reactants_counts
+    if reactants_counts:
+        return reactants_counts
+
+    state_nodes = [
+        node_info for node_info in data.values()
+        if isinstance(node_info, dict) and bool(node_info.get("is_state", False))
+    ]
+    for index, node_info in enumerate(state_nodes):
+        if node_info.get("depth") != index:
+            raise UnreliableReactantCountsError(
+                f"cannot infer reactant counts: state {index} has nonconsecutive depth"
+            )
+        if index == 0:
+            continue
+        inferred_count = node_info.get("inferred_reactant_count")
+        expanded = node_info.get("inferred_expanded_mol_smiles", [])
+        if (
+            not isinstance(inferred_count, int)
+            or isinstance(inferred_count, bool)
+            or inferred_count <= 0
+            or len(expanded) != 1
+        ):
+            raise UnreliableReactantCountsError(
+                f"cannot infer reactant counts at state {index}: expected one "
+                "expanded molecule and at least one newly introduced reactant"
+            )
+
+    return inferred_reactants_counts
 
 
 def building_blocks_count_from_pkl(route_pkl: Path, extract_data: Callable[[str], str]) -> int:
@@ -139,18 +176,16 @@ def building_blocks_count_from_pkl(route_pkl: Path, extract_data: Callable[[str]
 def analyze_method(
     method_dir: Path,
     extract_data: Callable[[str], str],
-    run_dir: Path | None = None,
 ) -> dict[str, object]:
     """
     Analyze all targets in a method directory and extract aggregated metrics.
 
-    Processes target directories in the latest run (or specified run), computing metrics
+    Processes all numeric target directories under the method, computing metrics
     including solving rate, wall-clock time, route length, and route count.
 
     Args:
-        method_dir: Path to the method directory (e.g., "results_6_runs/MEGAN_retro_star").
+        method_dir: Path to a method directory containing numeric target directories.
         extract_data: Function that deserializes pickle routes to JSON.
-        run_dir: Specific run directory to analyze. If None, uses latest run.
 
     Returns:
         Dictionary with aggregated metrics:
@@ -169,12 +204,18 @@ def analyze_method(
             - reaction_reactant_counts: Number of reactants for each reaction step
             - route_building_block_counts: Number of unique building blocks for each route
             - note: Concatenated error/warning messages (up to 5)
+
+    Raises:
+        RuntimeError: A route cannot be read or a required metric cannot be
+            extracted. Includes the file path and preserves the original cause.
+            Unreliable MCTS reactant inference instead emits a RuntimeWarning
+            and omits that method's entire reactant distribution.
     """
 
-    all_run_dirs = sorted(
+    target_dirs = sorted(
         d for d in method_dir.iterdir() if d.is_dir() and d.name.isdigit()
     )
-    if not all_run_dirs:
+    if not target_dirs:
         return {
             "method": method_dir.name,
             "run_dir": "",
@@ -190,10 +231,9 @@ def analyze_method(
             "route_lengths": [],
             "reaction_reactant_counts": [],
             "route_building_block_counts": [],
-            "note": "no run directories",
+            "note": "no target directories",
         }
 
-    selected_run_dir = run_dir or all_run_dirs[-1]
     repository_name = method_dir.parent.name
 
     n_total_targets = 0
@@ -206,8 +246,9 @@ def analyze_method(
     reaction_reactant_counts: list[int] = []
     route_building_block_counts: list[int] = []
     notes: list[str] = []
+    reactant_issues: list[str] = []
 
-    for target_dir in all_run_dirs:
+    for target_dir in target_dirs:
         stats_path = target_dir / "stats.json"
         if not stats_path.exists():
             continue
@@ -231,21 +272,39 @@ def analyze_method(
         route_files = sorted(target_dir.glob("route_*.pkl"))
         route_counts.append(float(len(route_files)))
         for route_file in route_files:
+            metric = "route length"
             try:
                 route_length = route_length_from_pkl(route_file, extract_data)
-                reaction_reactant_counts.extend(
-                    reactants_count_from_pkl(route_file, extract_data)
-                )
-                route_building_block_counts.append(
-                    building_blocks_count_from_pkl(route_file, extract_data)
-                )
+                if not is_finite_number(route_length):
+                    raise ValueError("no valid route length data")
+                metric = "reactant counts"
+                try:
+                    reactant_counts = reactants_count_from_pkl(route_file, extract_data)
+                except UnreliableReactantCountsError as exc:
+                    reactant_issues.append(f"{route_file}: {exc}")
+                    reactant_counts = []
+                metric = "building-block count"
+                building_block_count = building_blocks_count_from_pkl(route_file, extract_data)
             except Exception as exc:  # noqa: BLE001
-                notes.append(f"{target_dir.name}/{route_file.name}: parse failed ({exc})")
-                continue
-            if is_finite_number(route_length):
-                route_lengths.append(float(route_length))
-            else:
-                notes.append(f"{target_dir.name}/{route_file.name}: no valid route length data")
+                raise RuntimeError(
+                    f"Failed to extract {metric} from {route_file}: {exc}"
+                ) from exc
+            route_lengths.append(float(route_length))
+            reaction_reactant_counts.extend(reactant_counts)
+            route_building_block_counts.append(building_block_count)
+
+    if reactant_issues:
+        # Mixing valid routes with silently dropped transitions biases the
+        # normalized distribution. Keep the other metrics, but omit this entire
+        # method's reactant distribution and report an example of the problem.
+        reaction_reactant_counts = []
+        message = (
+            f"reactant counts omitted for {method_dir.name}: "
+            f"{len(reactant_issues)} route(s) have unreliable MCTS transitions; "
+            f"first issue: {reactant_issues[0]}"
+        )
+        notes.append(message)
+        warnings.warn(message, RuntimeWarning, stacklevel=2)
 
     return {
         "method": method_dir.name,

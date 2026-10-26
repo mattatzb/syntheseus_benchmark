@@ -21,7 +21,6 @@ def _path_from_env(name: str, default: Path) -> Path:
 
 class Config:
     PROJECT_ROOT: Path = Path(__file__).resolve().parents[1]
-    SRC_ROOT: Path = Path(__file__).resolve().parent
     RESULTS_ROOT: Path = _path_from_env(
         "SYNTHSEUS_BENCHMARK_RESULTS_ROOT",
         PROJECT_ROOT / "syntheseus_outputs" / "1_top_results",
@@ -38,33 +37,25 @@ class Config:
         "SYNTHSEUS_BENCHMARK_INVENTORY_SMILES_FILE",
         DATA_DIR / "enamine_sep_lpdc_blocks.smi",
     )
-    DEFAULT_OUTPUT_CSV: Path = OUTPUT_ROOT / "results_summary.csv"
     DEFAULT_SAMPLE_DIR: Path = OUTPUT_ROOT / "molecule_samples"
-    DEFAULT_OUTPUT_PLOT: Path = OUTPUT_ROOT / "results_plot.pdf"
+
+    @staticmethod
+    def campaign_for(path: Path) -> str | None:
+        """Identify a bundled campaign, including paths inside a method directory."""
+        resolved = path.resolve()
+        for candidate in (resolved, *resolved.parents):
+            if candidate.name in {"1_top_results", "50_top_results"}:
+                return candidate.name
+        return None
 
     @classmethod
-    def validate_path(cls, path: Path, description: str) -> None:
-        """
-        Validate that a critical path exists.
-
-        Args:
-            path: Path to validate.
-            description: Human-readable description of the path.
-
-        Raises:
-            FileNotFoundError: If the given path does not exist.
-        """
-        if not path.exists():
-            raise FileNotFoundError(f"Missing required path for {description}: {path}")
+    def summary_csv_for(cls, campaign: str | None) -> Path:
+        filename = f"{campaign}_summary.csv" if campaign else "benchmark_summary.csv"
+        return cls.OUTPUT_ROOT / filename
 
     @classmethod
-    def validate(cls) -> None:
-        """
-        Validate the most important repository paths.
-
-        This does not validate every possible path, only the paths that are
-        usually required for analysis and data processing.
-        """
-        cls.validate_path(cls.RESULTS_ROOT, "results root")
-        cls.validate_path(cls.OUTPUT_ROOT, "output root")
-        cls.validate_path(cls.DATA_DIR, "data directory")
+    def plot_data_dir_for(cls, campaign: str | None) -> Path:
+        # Preserve the published top-one paths; isolate the other campaign.
+        if campaign == "50_top_results":
+            return cls.OUTPUT_ROOT / campaign
+        return cls.OUTPUT_ROOT

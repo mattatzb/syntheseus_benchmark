@@ -9,7 +9,6 @@ including number validation, statistics, formatting, and file discovery.
 from __future__ import annotations
 
 import math
-import rdkit
 from pathlib import Path
 from statistics import mean
 from typing import Iterator

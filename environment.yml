@@ -1,0 +1,51 @@
+# Linux x86-64 environment for data preparation, saved-route analysis, and
+# LocalRetro / RetroKNN search. GPU search uses CUDA 11.3.
+# NumPy 1.26.4 reproduces the historical cluster ordering; analysis is unchanged.
+# MEGAN search uses a separate Syntheseus environment (see README).
+name: syntheseus_benchmark
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - dglteam
+  - pyg
+dependencies:
+  - python=3.9.7
+  - pip=25.0
+  - git=2.51.0=pl5382h9046301_1
+  - numpy=1.26.4
+  - pandas=2.1.4
+  - scipy=1.13.1
+  - networkx=3.2.1
+  - tqdm=4.67.1
+  - requests=2.32.4
+  - urllib3=2.5.0
+  - psutil=5.9.0
+  - typing_extensions=4.5.0
+  - cudatoolkit=11.3.1
+  - pytorch=1.10.2=py3.9_cuda11.3_cudnn8.2.0_0
+  - dgl-cuda11.3=0.9.1post1=py39_0
+  - faiss-gpu=1.7.4
+  - pytorch-scatter=2.0.9=py39_torch_1.10.0_cu113
+  - graphviz=2.50.0
+  - pip:
+      - pytest==8.4.1
+      - exceptiongroup==1.2.2
+      - rdkit==2025.3.5
+      - matplotlib==3.9.2
+      - pillow==11.1.0
+      - beautifulsoup4==4.14.3
+      - cirpy==1.0.2
+      # 1.0.5 requires Python >=3.10; retain the API used by the generator.
+      - pubchempy==1.0.4
+      - more-itertools==10.7.0
+      - omegaconf==2.3.0
+      - PyYAML==6.0.2
+      - graphviz==0.21
+      - syntheseus[local-retro,retro-knn,viz] @ git+https://github.com/microsoft/syntheseus.git@569e9a9dad74217f01b0fb2bb1114f6a8894be95
+      - syntheseus-local-retro==0.5.0
+      - dgllife==0.3.2
+      - chardet==5.2.0
+      - scikit-learn==1.6.1
+      - hyperopt==0.2.7
+      - joblib==1.5.1

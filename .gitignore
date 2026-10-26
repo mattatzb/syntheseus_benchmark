@@ -1,12 +1,15 @@
-# Syntheseus submit and configuration files
-syntheseus_outputs/configs/
-submit_run/
+# Local submission scripts
+.syntheseus_cache/
+.agents/
+.pytest_cache/
+.vscode/
 
 # Paths difference check
 Pistachio_tests/
 
 # Legacy files
 legacy_code/
+submit_run/
 
 # Temporary files
 outputs/test_outputs/
@@ -16,3 +19,8 @@ __pycache__/
 src/analysis/__pycache__/
 src/cli/__pycache__/
 src/data_prep/__pycache__/
+
+# Heavyweight data files in Zenodo
+MEGAN_backward/
+syntheseus_outputs/1_top_results/
+syntheseus_outputs/50_top_results/

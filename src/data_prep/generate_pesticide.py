@@ -1,5 +1,7 @@
 """Scrape the BCPC Pesticide Compendium for pesticides and their SMILES."""
 
+from __future__ import annotations
+
 import logging
 import time
 from pathlib import Path
@@ -13,15 +15,10 @@ from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-tqdm.pandas()
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 BASE_URL = "http://www.bcpcpesticidecompendium.org/"
 INDEX_URL = f"{BASE_URL}index_cn.html"
-RAW_CSV = Path("ids.csv")
-OUTPUT_CSV = Path("pesticides.csv")
 REQUEST_DELAY = 0.5
 
 
@@ -141,11 +138,13 @@ def get_smiles_from_identifiers(cas: str | None, inchi_key: str | None) -> str:
     return smiles if smiles is not None else "Failed"
 
 
-def fetch_or_load_raw(session: requests.Session) -> pd.DataFrame:
-    """Load the raw database from disk or scrape it if missing."""
-    if RAW_CSV.exists():
-        logger.info("Loading cached raw data from %s", RAW_CSV)
-        return pd.read_csv(RAW_CSV)
+def fetch_or_load_raw(
+    session: requests.Session, cache_csv: Path | None = None,
+) -> pd.DataFrame:
+    """Scrape identifiers, optionally using an explicitly supplied cache."""
+    if cache_csv is not None and cache_csv.exists():
+        logger.info("Loading cached identifiers from %s", cache_csv)
+        return pd.read_csv(cache_csv)
 
     logger.info("Scraping pesticide index from %s", INDEX_URL)
     page_names = extract_pesticide_names(session)
@@ -154,26 +153,24 @@ def fetch_or_load_raw(session: requests.Session) -> pd.DataFrame:
     records = scrape_pesticide_data(session, page_names)
 
     df = pd.DataFrame(records)
-    df.to_csv(RAW_CSV, index=False)
-    logger.info("Saved raw data to %s", RAW_CSV)
+    if cache_csv is not None:
+        df.to_csv(cache_csv, index=False)
     return df
 
 
-def main() -> None:
-    session = _create_session()
+def generate_raw_dataset() -> pd.DataFrame:
+    """Fetch live identifiers and resolve structures without writing any files.
 
-    df = fetch_or_load_raw(session)
+    External databases change. Reproduce the paper using the archived raw CSV
+    through src/cli/prepare_data.py, rather than calling this function.
+    """
+    with _create_session() as session:
+        df = fetch_or_load_raw(session)
     df = df.fillna("None")
 
     logger.info("Resolving SMILES from CAS numbers and InChI keys...")
-    df["smiles"] = df.progress_apply(
-        lambda row: get_smiles_from_identifiers(row["cas"], row["inchi_key"]),
-        axis=1,
-    )
-
-    df.to_csv(OUTPUT_CSV, index=False)
-    logger.info("Saved %d rows to %s", len(df), OUTPUT_CSV)
-
-
-if __name__ == "__main__":
-    main()
+    df["smiles"] = [
+        get_smiles_from_identifiers(row.cas, row.inchi_key)
+        for row in tqdm(df.itertuples(index=False), total=len(df), desc="Resolving structures")
+    ]
+    return df

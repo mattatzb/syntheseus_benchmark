@@ -10,10 +10,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import random
 from pathlib import Path
-from typing import Iterator
 
 from rdkit import Chem
 from rdkit.Chem import Draw
@@ -51,7 +49,7 @@ def target_record_from_stats(stats: dict[str, object], target_dir: Path) -> dict
 
 def load_method_records(method_dir: Path) -> tuple[Path | None, list[dict[str, object]]]:
     """
-    Load all target records from a method's latest run directory.
+    Load target records directly from a method directory.
 
     Reads stats.json files from each target directory and filters out inventory-owned molecules.
 
@@ -60,7 +58,7 @@ def load_method_records(method_dir: Path) -> tuple[Path | None, list[dict[str, o
 
     Returns:
         Tuple of (run_dir, records) where:
-            - run_dir: Path to the latest run directory (or None if not found)
+            - run_dir: The supplied method directory (or None if none was supplied)
             - records: List of target record dictionaries
     """
     if method_dir is None:
@@ -169,14 +167,14 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description=(
-            "Sample molecules from each method's latest run directory and display solved/unsolved sets."
+            "Sample molecules from each method directory and display solved/unsolved sets."
         )
     )
     parser.add_argument(
         "--results-root",
         type=Path,
         default=Config.RESULTS_ROOT,
-        help="Root directory containing method folders (default: results_6_runs).",
+        help=f"Root directory containing method folders (default: {Config.RESULTS_ROOT}).",
     )
     parser.add_argument(
         "--n-solved",

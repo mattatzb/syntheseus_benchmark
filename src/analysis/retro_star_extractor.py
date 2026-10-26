@@ -8,7 +8,7 @@ into JSON-serializable dictionaries containing node information (molecules, reac
 
 import json
 import pickle
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 
 def extract_data(file_path: str) -> str:

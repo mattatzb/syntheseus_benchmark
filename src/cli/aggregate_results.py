@@ -7,7 +7,6 @@ from multiple method runs into a single CSV file.
 
 Usage:
     python aggregate_results.py --results-root <path> --output-csv <path> [options]
-    python aggregate_results.py --run-dir <path> [options]
 """
 
 from __future__ import annotations

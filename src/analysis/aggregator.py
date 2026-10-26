@@ -2,8 +2,7 @@
 """
 Benchmark results aggregation and CSV output.
 
-This module handles CSV I/O operations including reading, writing, and merging
-benchmark results across multiple methods and runs.
+This module writes benchmark summaries and distributions across methods.
 """
 
 from __future__ import annotations
@@ -11,9 +10,9 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import sys
 from collections import Counter
 from pathlib import Path
-from typing import Any
 
 from .utils import format_float
 from .route_processor import analyze_method
@@ -25,6 +24,8 @@ from .plots import plot_distribution_csvs
 
 
 # Column configuration constants
+# The historical "run_dir" column holds the campaign label, such as
+# "1_top_results". Keep the header and values compatible with saved outputs.
 INVENTORY_COLUMNS = ["n_inventory_excluded", "inventory_true_pct"]
 DEBUG_COLUMNS = ["n_targets", "n_solved", "note"]
 EXCLUDED_METHOD_DIRS = {"analysis", "configs"}
@@ -239,58 +240,6 @@ def write_plot_data_csvs(
     return written_paths
 
 
-def read_existing_csv(input_csv: Path) -> list[dict[str, object]]:
-    """
-    Read an existing CSV file into a list of dictionaries.
-
-    Args:
-        input_csv: Path to CSV file to read.
-
-    Returns:
-        List of dictionaries (one per row), or empty list if file doesn't exist.
-    """
-    if not input_csv.exists():
-        return []
-
-    with input_csv.open("r", newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def merge_rows(
-    existing_rows: list[dict[str, object]], new_rows: list[dict[str, object]]
-) -> list[dict[str, object]]:
-    """
-    Merge new analysis rows into existing CSV data.
-
-    Replaces rows with matching method names or appends new methods.
-    Preserves the order of existing rows.
-
-    Args:
-        existing_rows: Rows from the existing CSV.
-        new_rows: Newly analyzed rows.
-
-    Returns:
-        Merged list of rows with updated data for matched methods.
-    """
-    new_rows_by_method = {str(row["method"]): row for row in new_rows}
-    merged_rows: list[dict[str, object]] = []
-    seen_methods: set[str] = set()
-
-    for row in existing_rows:
-        method = str(row.get("method", ""))
-        if method in new_rows_by_method:
-            merged_rows.append(new_rows_by_method[method])
-            seen_methods.add(method)
-        else:
-            merged_rows.append(row)
-
-    for method, row in sorted(new_rows_by_method.items()):
-        if method not in seen_methods:
-            merged_rows.append(row)
-
-    return merged_rows
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Aggregate benchmark metrics across methods into a CSV."
@@ -304,8 +253,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-csv",
         type=Path,
-        default=Config.DEFAULT_OUTPUT_CSV,
-        help="Path to output CSV.",
+        default=None,
+        help="Output CSV path. By default, its name follows the selected top-1/top-50 campaign.",
     )
     parser.add_argument(
         "--write-plot-data",
@@ -323,8 +272,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--plot-data-dir",
         type=Path,
-        default=Config.OUTPUT_ROOT,
-        help="Directory for plot-data CSVs.",
+        default=None,
+        help="Directory for distribution CSVs and results_plot.pdf. Top-50 defaults to outputs/50_top_results/.",
     )
     parser.add_argument(
         "--show-inventory-columns",
@@ -347,79 +296,57 @@ def parse_args() -> argparse.Namespace:
             "If omitted, all method directories under --results-root are analyzed."
         ),
     )
-    parser.add_argument(
-        "--merge-with-existing",
-        action="store_true",
-        help="Merge analyzed rows into the existing output CSV instead of replacing all rows.",
-    )
-    parser.add_argument(
-        "--run-dir",
-        dest="run_dirs",
-        type=Path,
-        action="append",
-        default=[],
-        help=(
-            "Specific run directory to analyze. Can be passed multiple times. "
-            "The method name is taken from the parent directory of the run directory."
-        ),
-    )
-    return parser.parse_args()
+    args = parser.parse_args()
+    campaigns = {Config.campaign_for(path) for path in args.method_dirs}
+    campaigns.discard(None)
+    if len(campaigns) > 1:
+        parser.error("Analyze top-1 and top-50 methods in separate invocations.")
+    campaign = next(iter(campaigns), Config.campaign_for(args.results_root))
+    if args.output_csv is None:
+        args.output_csv = Config.summary_csv_for(campaign)
+    if args.plot_data_dir is None:
+        args.plot_data_dir = Config.plot_data_dir_for(campaign)
+    return args
 
 
 def main() -> None:
     """
     Main entry point for benchmark aggregation.
 
-    Loads extraction function, analyzes method directories (or specific runs),
-    optionally merges with existing results, and writes aggregated CSV.
+    Analyze all numeric target directories in each selected method and write CSVs.
     """
     args = parse_args()
 
-    if args.run_dirs:
-        run_dirs = sorted(Path(run_dir).resolve() for run_dir in args.run_dirs)
-        analyzed_rows = [
-            analyze_method(
-                run_dir.parent,
-                extractor_for_method(run_dir.parent),
-                run_dir=run_dir,
-            )
-            for run_dir in run_dirs
-        ]
+    if args.method_dirs:
+        method_dirs = sorted(Path(method_dir).resolve() for method_dir in args.method_dirs)
     else:
-        if args.method_dirs:
-            method_dirs = sorted(Path(method_dir).resolve() for method_dir in args.method_dirs)
-        else:
-            method_dirs = sorted(
-                d
-                for d in args.results_root.iterdir()
-                if d.is_dir() and d.name not in EXCLUDED_METHOD_DIRS
-            )
+        method_dirs = sorted(
+            d
+            for d in args.results_root.iterdir()
+            if d.is_dir() and d.name not in EXCLUDED_METHOD_DIRS
+        )
 
-        analyzed_rows = [
-            analyze_method(method_dir, extractor_for_method(method_dir))
-            for method_dir in method_dirs
-        ]
-
-    rows = analyzed_rows
-    if args.merge_with_existing:
-        existing_rows = read_existing_csv(args.output_csv)
-        rows = merge_rows(existing_rows, analyzed_rows)
+    analyzed_rows = [
+        analyze_method(method_dir, extractor_for_method(method_dir))
+        for method_dir in method_dirs
+    ]
 
     write_csv(
-        rows,
+        analyzed_rows,
         args.output_csv,
         show_inventory_columns=args.show_inventory_columns,
         show_debug_columns=args.show_debug_columns,
     )
 
-    print(f"Wrote {len(rows)} rows to {args.output_csv}")
+    print(f"Wrote {len(analyzed_rows)} rows to {args.output_csv}")
     if args.write_plot_data or args.plot_distributions:
         written_paths = write_plot_data_csvs(analyzed_rows, args.plot_data_dir)
         for path in written_paths.values():
             print(f"Wrote plot data to {path}")
         if args.plot_distributions:
-            plot_distribution_csvs(args.plot_data_dir, Config.DEFAULT_OUTPUT_PLOT)
-            print(f"Wrote plots to {Config.DEFAULT_OUTPUT_PLOT}")
+            output_pdf = args.plot_data_dir / "results_plot.pdf"
+            plot_distribution_csvs(args.plot_data_dir, output_pdf)
+            print(f"Wrote plots to {output_pdf}")
 
     for row in analyzed_rows:
         line = (
@@ -435,6 +362,8 @@ def main() -> None:
                 f"inv_true_pct={format_float(row['inventory_true_pct'], 2)}%"
             )
         print(line)
+        if row["note"]:
+            print(f"WARNING: {row['method']}: {row['note']}", file=sys.stderr)
 
 
 if __name__ == "__main__":

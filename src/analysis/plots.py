@@ -55,9 +55,6 @@ def _require_matplotlib() -> None:
 def _read_distribution_csv(input_csv: Path) -> dict[str, dict[int, float]]:
     """Read one distribution CSV into method -> value -> proportion."""
     distribution: dict[str, dict[int, float]] = defaultdict(dict)
-    if not input_csv.exists():
-        return distribution
-
     with input_csv.open("r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -80,6 +77,10 @@ def read_distribution_data(plot_data_dir: Path) -> MetricData:
 
     Returns:
         Mapping metric name -> method -> value -> proportion.
+
+    Raises:
+        FileNotFoundError: Any required distribution CSV is missing. Existing
+            header-only CSVs remain valid for intentionally omitted distributions.
     """
     return {
         metric: _read_distribution_csv(plot_data_dir / filename)
